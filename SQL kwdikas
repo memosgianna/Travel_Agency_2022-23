@@ -1,0 +1,1375 @@
+
+
+CREATE TABLE branch(
+	br_code int(11) NOT NULL,
+	br_street varchar(30) DEFAULT "unknown",
+	br_num int(4) DEFAULT NULL,
+	br_city VARCHAR(30) DEFAULT "unknown",
+	PRIMARY KEY(br_code)
+);
+	
+CREATE TABLE phones(
+	ph_br_code int(11) NOT NULL,
+	ph_number char(10) NOT NULL,
+	PRIMARY KEY(ph_br_code, ph_number),	
+	CONSTRAINT foreign_ph_br_code FOREIGN KEY (ph_br_code) REFERENCES branch(br_code)
+	ON DELETE CASCADE ON UPDATE CASCADE 
+);
+
+CREATE TABLE worker(
+	wrk_AT char(10) NOT NULL,
+	wrk_name varchar(20) DEFAULT "unknown",
+	wrk_lname varchar(20) DEFAULT "unknown",
+	wrk_salary float(7,2),
+	wrk_br_code int(11), 													
+	PRIMARY KEY(wrk_AT),
+	CONSTRAINT foreign_wrk_br_code FOREIGN KEY (wrk_br_code) REFERENCES branch(br_code)
+	ON DELETE CASCADE ON UPDATE CASCADE	
+);
+
+CREATE TABLE driver(
+	drv_AT char(10) NOT NULL,
+	drv_license ENUM('A', 'B', 'C', 'D'),
+	drv_route ENUM('LOCAL', 'ABROAD'),
+	drv_experience tinyint(4), 
+	PRIMARY KEY(drv_AT),
+	CONSTRAINT foreign_drv_AT FOREIGN KEY (drv_AT) REFERENCES worker(wrk_AT)
+	ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+CREATE TABLE admin(
+	adm_AT char(10) NOT NULL,
+	adm_type ENUM('LOGISTICS', 'ADMINISTRATIVE', 'ACCOUNTING'),
+	adm_diploma varchar(200),
+	PRIMARY KEY(adm_AT),
+	CONSTRAINT foreign_adm_AT FOREIGN KEY (adm_AT) REFERENCES worker(wrk_AT)
+	ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+CREATE TABLE guide(
+	gui_AT char(10) NOT NULL,
+	gui_cv text,
+	PRIMARY KEY(gui_AT),
+	CONSTRAINT foreign_gui_AT FOREIGN KEY (gui_AT) REFERENCES worker(wrk_AT)
+	ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+CREATE TABLE languages(
+	lng_gui_AT char(10) NOT NULL,
+	lng_language varchar(30) NOT NULL,
+	PRIMARY KEY(lng_gui_AT, lng_language),
+	CONSTRAINT foreign_lang_gui_AT FOREIGN KEY (lng_gui_AT) REFERENCES guide(gui_AT)
+	ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+CREATE TABLE manages(
+	mng_adm_AT char(10) NOT NULL,
+	mng_br_code int(11) NOT NULL,
+	PRIMARY KEY(mng_adm_AT, mng_br_code),
+	CONSTRAINT foreign_mng_adm_AT FOREIGN KEY (mng_adm_AT) REFERENCES admin(adm_AT)
+	ON DELETE CASCADE ON UPDATE CASCADE,		
+	CONSTRAINT foreign_mng_br_code FOREIGN KEY (mng_br_code) REFERENCES branch(br_code)
+	ON DELETE CASCADE ON UPDATE CASCADE	
+);
+
+CREATE TABLE trip(
+	tr_id int(11) NOT NULL AUTO_INCREMENT,
+	tr_departure datetime DEFAULT NULL,
+	tr_return datetime DEFAULT NULL,
+	tr_maxseats tinyint(4) DEFAULT NULL,
+	tr_cost float(7,2) DEFAULT NULL,
+	tr_br_code int(11) NOT NULL,
+	tr_gui_AT char(10) NOT NULL,
+	tr_drv_AT char(10) NOT NULL,
+	PRIMARY KEY(tr_id),
+	CONSTRAINT foreign_tr_br_code FOREIGN KEY (tr_br_code) REFERENCES branch(br_code)
+	ON DELETE CASCADE ON UPDATE CASCADE,
+	CONSTRAINT foreign_tr_gui_AT FOREIGN KEY (tr_gui_AT) REFERENCES guide(gui_AT)
+	ON DELETE CASCADE ON UPDATE CASCADE,	
+	CONSTRAINT foreign_tr_drv_AT FOREIGN KEY (tr_drv_AT) REFERENCES driver(drv_AT)
+	ON DELETE CASCADE ON UPDATE CASCADE		
+);
+
+CREATE TABLE event(
+	ev_tr_id int(11) NOT NULL AUTO_INCREMENT,
+	ev_start datetime NOT NULL,
+	ev_end datetime DEFAULT NULL,
+	ev_descr text,
+	PRIMARY KEY (ev_tr_id, ev_start),
+	CONSTRAINT foreign_ev_tr_id FOREIGN KEY (ev_tr_id) REFERENCES trip(tr_id)
+	ON DELETE CASCADE ON UPDATE CASCADE		
+);
+
+CREATE TABLE reservation(
+	res_tr_id int(11) NOT NULL,
+	res_seatnum tinyint(4) NOT NULL,
+	res_name varchar(20) DEFAULT "unknown",
+	res_lname varchar(20) DEFAULT "unknown",
+	res_isadult ENUM('ADULT', 'MINOR'),
+	PRIMARY KEY (res_tr_id, res_seatnum),
+	CONSTRAINT foreign_res_tr_id FOREIGN KEY (res_tr_id) REFERENCES trip(tr_id)
+	ON DELETE CASCADE ON UPDATE CASCADE	
+);
+
+CREATE TABLE destination(
+	dst_id int(11) NOT NULL AUTO_INCREMENT,
+	dst_name varchar(50) DEFAULT "unknown",
+	dst_descr text,
+	dst_rtype ENUM('LOCAL', 'ABROAD'),
+	dst_language varchar(30) DEFAULT "unknown",
+	dst_location int(11) NOT NULL,
+	PRIMARY KEY (dst_id),
+	CONSTRAINT foreign_dst_location FOREIGN KEY (dst_location) REFERENCES destination(dst_id)
+	ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+CREATE TABLE travel_to(
+	to_tr_id int(11) NOT NULL, 
+	to_dst_id int(11) NOT NULL,
+	to_arrival datetime DEFAULT NULL,
+	to_departure datetime DEFAULT NULL,
+	PRIMARY KEY(to_tr_id, to_dst_id),
+	CONSTRAINT foreign_to_dst_id FOREIGN KEY (to_dst_id) REFERENCES destination(dst_id)
+	ON DELETE CASCADE ON UPDATE CASCADE,
+	CONSTRAINT foreign_to_tr_id FOREIGN KEY (to_tr_id) REFERENCES trip(tr_id)
+	ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+-- extra: 
+
+-- erotima 3.1.2.1: tha exw 10 tetoious, enan gia kather branch
+
+INSERT INTO worker VALUES("AB0061", "Stanton", "Espinoza", 3000, 0001);
+INSERT INTO worker VALUES("AB0062", "Joseph", "Larson", 3000, 0002);
+INSERT INTO worker VALUES("AB0063", "Leslie", "Lin", 3000, 0003);
+INSERT INTO worker VALUES("AB0064", "Micheal", "Fisher", 3000, 0004);
+INSERT INTO worker VALUES("AB0065", "Jenny", "Hardin", 3000, 0005);
+INSERT INTO worker VALUES("AB0066", "Blanche", "Mathis", 3000, 0006);
+INSERT INTO worker VALUES("AB0067", "Janette", "Decker", 3000, 0007);
+INSERT INTO worker VALUES("AB0068", "Susan", "Murray", 3000, 0008);
+INSERT INTO worker VALUES("AB0069", "Benedict", "Rivas", 3000, 0009);
+INSERT INTO worker VALUES("AB0070", "Rene", "Steele", 3000, 0010);
+
+CREATE TABLE IT_worker(
+	IT_AT char(10) NOT NULL,
+	password varchar(10) DEFAULT "password",
+	start_date DATE NOT NULL,
+	end_date DATE NOT NULL,
+	PRIMARY KEY(IT_AT),
+	CONSTRAINT foreign_IT_AT FOREIGN KEY (IT_AT) REFERENCES worker(wrk_AT)
+	ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+INSERT INTO IT_worker VALUES("AB0061", "k1292", "2019-01-20", "2023-01-20");
+INSERT INTO IT_worker VALUES("AB0062", "a7621", "2017-03-24", "2021-03-24");
+INSERT INTO IT_worker VALUES("AB0063", "i8213", "2016-01-20", "2024-04-20");
+INSERT INTO IT_worker VALUES("AB0064", "a3214", "2018-03-21", "2021-08-29");
+INSERT INTO IT_worker VALUES("AB0065", "a5221", "2016-05-10", "2019-04-02");
+INSERT INTO IT_worker VALUES("AB0066", "l0924", "2017-09-12", "2021-05-24");
+INSERT INTO IT_worker VALUES("AB0067", "b2421", "2020-01-10", "2024-11-17");
+INSERT INTO IT_worker VALUES("AB0068", "w2245", "2016-09-11", "2021-08-19");
+INSERT INTO IT_worker VALUES("AB0069", "r2156", "2021-01-10", "2024-12-17");
+INSERT INTO IT_worker VALUES("AB0070", "u7777", "2014-09-11", "2021-08-19");
+
+-- erotima 3.1.2.3: 
+
+CREATE TABLE offers(
+	id_prosforas int(11) NOT NULL AUTO_INCREMENT,
+	possible_start DATE NOT NULL,
+	possible_end DATE NOT NULL,
+	cost_per_human float(7,2) NOT NULL,
+	destination_id int(11) NOT NULL,
+	PRIMARY KEY(id_prosforas),
+	UNIQUE(id_prosforas),
+	CONSTRAINT foreign_destination_id FOREIGN KEY (destination_id) REFERENCES destination(dst_id)
+	ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+CREATE TABLE reservation_offers(
+	id_kratisis_prosforas int(11) NOT NULL AUTO_INCREMENT,
+	pelatis_lname varchar(20) NOT NULL,
+	pelatis_first_name varchar(20) NOT NULL,
+	offer_id int(11) NOT NULL,
+	prokatavoli float(7,2) NOT NULL,
+	PRIMARY KEY(id_kratisis_prosforas),
+	CONSTRAINT foreign_offer_id FOREIGN KEY (offer_id) REFERENCES offers(id_prosforas)
+	ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+INSERT INTO offers VALUES(NULL, "2023-01-15", "2023-01-21", 300.0, 10);	-- xeimwniatiko, thessaloniki
+INSERT INTO offers VALUES(NULL, "2023-06-15", "2023-06-29", 800.0, 2);  -- kalokairino, tinos
+INSERT INTO offers VALUES(NULL, "2023-09-02", "2023-09-11", 600.0, 13); -- fthinopwro, madrid
+
+-- gia kathe offer thelw 20000 reservation_offers, sinolo: 60000, prokatavoli 50-200 euro
+-- ftiaxnw csv file 
+-- https://www.youtube.com/watch?v=1syxoF34IJI
+
+LOAD DATA INFILE 'C:/uni/dedomena.csv' INTO TABLE reservation_offers
+FIELDS TERMINATED BY ','
+OPTIONALLY ENCLOSED BY '"'
+LINES TERMINATED BY '\r\n';
+
+/* --------------------------------------------------------------------------------------- */
+
+
+-- triggers: 
+-- 3.1.4.3: den epitrepetai h meiwsh misthou enos ypallilou: 
+delimiter $
+CREATE TRIGGER elegxos_misthou BEFORE UPDATE ON worker 
+FOR EACH ROW
+BEGIN 
+	IF(NEW.wrk_salary < OLD.wrk_salary)
+	THEN
+		SIGNAL SQLSTATE VALUE '45000'
+		SET MESSAGE_TEXT="Den epitrepetai h meiwsh misthou!";
+	END IF;
+END $
+DELIMITER ;
+
+-- o worker me AT=AB0002 exei salary 1500, ara me 1300 varaei error
+UPDATE worker
+SET wrk_salary=1300
+WHERE wrk_AT="AB0002";
+
+-- elegxos gia na min varesei error me auksish misthou
+UPDATE worker
+SET wrk_salary=1800
+WHERE wrk_AT="AB0002";
+
+
+-- 3.1.4.3: den epitrepetai allagi imerominas anaxwrisis, epistrofis kai allagi kostos an uparxoun kratiseis gia
+-- sigkekrimeno taksidi
+DELIMITER $
+CREATE TRIGGER elegxos_kratisewn BEFORE UPDATE ON trip 
+FOR EACH ROW
+BEGIN	
+	DECLARE kratiseis INT;
+	DECLARE allages INT;
+	IF(NEW.tr_departure <> OLD.tr_departure || NEW.tr_return <> OLD.tr_return || NEW.tr_cost <> OLD.tr_cost)
+	THEN
+		SELECT COUNT(*) INTO kratiseis FROM reservation WHERE res_tr_id=NEW.tr_id;
+		IF(kratiseis >=1) 
+		THEN
+			SIGNAL SQLSTATE VALUE '45000'
+			SET MESSAGE_TEXT="Den epitrepetai h allagi imerominias kai kostous giati uparxoun kratiseis";
+		ELSEIF(kratiseis < 1)
+		THEN 
+			SET allages=1;
+		END IF;
+	END IF;
+END$
+DELIMITER ;
+-- elegxoi gia trip
+
+UPDATE trip
+SET tr_cost=1900
+WHERE tr_id=1;
+
+UPDATE trip
+SET tr_departure="2000-10-01 00:01:00"
+WHERE tr_id=1;
+
+UPDATE trip
+SET tr_return="2000-10-01 00:01:00"
+WHERE tr_id=1;
+
+-- elegxos pou den prepei na piasei o TRIGGER
+-- ena insert akomi sto branch 10 pou den exei reserv
+INSERT INTO trip VALUES(NULL, "2000-01-01 00:00:02", "2001-01-01 00:00:02", 2, 1000, 10, "AB0025", "AB0024");
+DELETE FROM trip WHERE tr_id=0;
+
+UPDATE trip
+SET tr_cost=1800
+WHERE tr_id=33;
+
+UPDATE trip
+SET tr_departure="2000-10-01 00:01:00"
+WHERE tr_id=33;
+
+UPDATE trip
+SET tr_return="2000-10-01 00:01:00"
+WHERE tr_id=33;
+
+-- 3.1.4.1 mazi me 3.1.2.2: PINAKAS log;
+
+CREATE TABLE log(
+	arithmos_log int(11) AUTO_INCREMENT,
+	energeia ENUM('INSERT', 'UPDATE', 'DELETE'),
+	pinakas ENUM('trip', 'reservation', 'event', 'travel_to', 'destination'),
+	id_IT_worker char(10) NOT NULL,
+	PRIMARY KEY(arithmos_log),
+	CONSTRAINT foreign_id_IT_worker FOREIGN KEY (id_IT_worker) REFERENCES IT_worker(IT_AT)
+	ON DELETE CASCADE ON UPDATE CASCADE	
+);
+
+-- triggers gia trip
+--INSERT: 
+
+DELIMITER $
+CREATE TRIGGER log_INSERT_trip AFTER INSERT ON trip
+FOR EACH ROW
+BEGIN 
+	DECLARE upeuthinos char(10);
+	DECLARE branch_kodikos int(11);
+	
+	SET branch_kodikos=NEW.tr_br_code;
+	
+	SELECT wrk_AT INTO upeuthinos
+	FROM worker
+	INNER JOIN IT_worker ON worker.wrk_AT=IT_worker.IT_AT
+	WHERE wrk_br_code=branch_kodikos;
+	
+	INSERT INTO log VALUES(NULL, 'INSERT', 'trip', upeuthinos);
+	
+END $
+DELIMITER ;
+
+--DELETE: 
+DELIMITER $
+CREATE TRIGGER log_DELETE_trip AFTER DELETE ON trip
+FOR EACH ROW
+BEGIN 
+	DECLARE upeuthinos char(10);
+	DECLARE branch_kodikos int(11);
+	
+	SET branch_kodikos=OLD.tr_br_code;
+	
+	SELECT wrk_AT INTO upeuthinos
+	FROM worker
+	INNER JOIN IT_worker ON worker.wrk_AT=IT_worker.IT_AT
+	WHERE wrk_br_code=branch_kodikos;
+	
+	INSERT INTO log VALUES(NULL, 'DELETE', 'trip', upeuthinos);
+	
+END $
+DELIMITER ;
+
+--UPDATE:
+DELIMITER $
+CREATE TRIGGER log_UPDATE_trip AFTER UPDATE ON trip
+FOR EACH ROW
+BEGIN 
+	DECLARE upeuthinos char(10);
+	DECLARE branch_kodikos int(11);
+	
+	SET branch_kodikos=OLD.tr_br_code;
+	
+	SELECT wrk_AT INTO upeuthinos
+	FROM worker
+	INNER JOIN IT_worker ON worker.wrk_AT=IT_worker.IT_AT
+	WHERE wrk_br_code=branch_kodikos;
+	
+	INSERT INTO log VALUES(NULL, 'UPDATE', 'trip', upeuthinos);
+	
+END $
+DELIMITER ;
+
+-- triggers gia reservation:
+--INSERT:
+
+DELIMITER $
+CREATE TRIGGER log_INSERT_reservation AFTER INSERT ON reservation
+FOR EACH ROW
+BEGIN 
+	DECLARE upeuthinos char(10);
+	DECLARE branch_kodikos int(11);
+	DECLARE taksidi int(11);
+	
+	SET taksidi=NEW.res_tr_id;
+	
+	SELECT tr_br_code INTO branch_kodikos FROM trip WHERE tr_id=taksidi;
+	
+	SELECT wrk_AT INTO upeuthinos
+	FROM worker
+	INNER JOIN IT_worker ON worker.wrk_AT=IT_worker.IT_AT
+	WHERE wrk_br_code=branch_kodikos;
+	
+	INSERT INTO log VALUES(NULL, 'INSERT', 'reservation', upeuthinos);
+	
+END $
+DELIMITER ;
+
+--DELETE: 
+DELIMITER $
+CREATE TRIGGER log_DELETE_reservation AFTER DELETE ON reservation
+FOR EACH ROW
+BEGIN 
+	DECLARE upeuthinos char(10);
+	DECLARE branch_kodikos int(11);
+	DECLARE taksidi int(11);
+	
+	SET taksidi=OLD.res_tr_id;
+	
+	SELECT tr_br_code INTO branch_kodikos FROM trip WHERE tr_id=taksidi;
+	
+	SELECT wrk_AT INTO upeuthinos
+	FROM worker
+	INNER JOIN IT_worker ON worker.wrk_AT=IT_worker.IT_AT
+	WHERE wrk_br_code=branch_kodikos;
+	
+	INSERT INTO log VALUES(NULL, 'DELETE', 'reservation', upeuthinos);
+	
+END $
+DELIMITER ;
+
+--UPDATE:
+DELIMITER $
+CREATE TRIGGER log_UPDATE_reservation AFTER UPDATE ON reservation
+FOR EACH ROW
+BEGIN 
+	DECLARE upeuthinos char(10);
+	DECLARE branch_kodikos int(11);
+	DECLARE taksidi int(11);
+	
+	SET taksidi=OLD.res_tr_id;
+	
+	SELECT tr_br_code INTO branch_kodikos FROM trip WHERE tr_id=taksidi;
+	
+	SELECT wrk_AT INTO upeuthinos
+	FROM worker
+	INNER JOIN IT_worker ON worker.wrk_AT=IT_worker.IT_AT
+	WHERE wrk_br_code=branch_kodikos;
+	
+	INSERT INTO log VALUES(NULL, 'UPDATE', 'reservation', upeuthinos);
+	
+END $
+DELIMITER ;
+
+
+-- triggers gia event:
+-- INSERT:
+
+DELIMITER $
+CREATE TRIGGER log_INSERT_event AFTER INSERT ON event
+FOR EACH ROW
+BEGIN 
+	DECLARE upeuthinos char(10);
+	DECLARE branch_kodikos int(11);
+	DECLARE taksidi int(11);
+	
+	SET taksidi=NEW.ev_tr_id;
+	
+	SELECT tr_br_code INTO branch_kodikos FROM trip WHERE tr_id=taksidi;
+	
+	SELECT wrk_AT INTO upeuthinos
+	FROM worker
+	INNER JOIN IT_worker ON worker.wrk_AT=IT_worker.IT_AT
+	WHERE wrk_br_code=branch_kodikos;
+	
+	INSERT INTO log VALUES(NULL, 'INSERT', 'event', upeuthinos);
+	
+END $
+DELIMITER ;
+
+--DELETE: 
+DELIMITER $	
+CREATE TRIGGER log_DELETE_event AFTER DELETE ON event
+FOR EACH ROW
+BEGIN 
+	DECLARE upeuthinos char(10);
+	DECLARE branch_kodikos int(11);
+	DECLARE taksidi int(11);
+	
+	SET taksidi=OLD.ev_tr_id;
+	
+	SELECT tr_br_code INTO branch_kodikos FROM trip WHERE tr_id=taksidi;
+	
+	SELECT wrk_AT INTO upeuthinos
+	FROM worker
+	INNER JOIN IT_worker ON worker.wrk_AT=IT_worker.IT_AT
+	WHERE wrk_br_code=branch_kodikos;
+	
+	INSERT INTO log VALUES(NULL, 'DELETE', 'event', upeuthinos);
+	
+END $
+DELIMITER ;
+
+--UPDATE:
+DELIMITER $	
+CREATE TRIGGER log_UPDATE_event AFTER UPDATE ON event
+FOR EACH ROW
+BEGIN 
+	DECLARE upeuthinos char(10);
+	DECLARE branch_kodikos int(11);
+	DECLARE taksidi int(11);
+	
+	SET taksidi=OLD.ev_tr_id;
+	
+	SELECT tr_br_code INTO branch_kodikos FROM trip WHERE tr_id=taksidi;
+	
+	SELECT wrk_AT INTO upeuthinos
+	FROM worker
+	INNER JOIN IT_worker ON worker.wrk_AT=IT_worker.IT_AT
+	WHERE wrk_br_code=branch_kodikos;
+	
+	INSERT INTO log VALUES(NULL, 'UPDATE', 'event', upeuthinos);
+	
+END $
+DELIMITER ;
+
+
+-- triggers gia travel_to:
+-- INSERT:
+
+DELIMITER $
+CREATE TRIGGER log_INSERT_travel_to AFTER INSERT ON travel_to
+FOR EACH ROW
+BEGIN 
+	DECLARE upeuthinos char(10);
+	DECLARE branch_kodikos int(11);
+	DECLARE taksidi int(11);
+	
+	SET taksidi=NEW.to_tr_id;
+	
+	SELECT tr_br_code INTO branch_kodikos FROM trip WHERE tr_id=taksidi;
+	
+	SELECT wrk_AT INTO upeuthinos
+	FROM worker
+	INNER JOIN IT_worker ON worker.wrk_AT=IT_worker.IT_AT
+	WHERE wrk_br_code=branch_kodikos;
+	
+	INSERT INTO log VALUES(NULL, 'INSERT', 'travel_to', upeuthinos);
+	
+END $
+DELIMITER ;
+
+--DELETE:
+DELIMITER $
+CREATE TRIGGER log_DELETE_travel_to AFTER DELETE ON travel_to
+FOR EACH ROW
+BEGIN 
+	DECLARE upeuthinos char(10);
+	DECLARE branch_kodikos int(11);
+	DECLARE taksidi int(11);
+	
+	SET taksidi=OLD.to_tr_id;
+	
+	SELECT tr_br_code INTO branch_kodikos FROM trip WHERE tr_id=taksidi;
+	
+	SELECT wrk_AT INTO upeuthinos
+	FROM worker
+	INNER JOIN IT_worker ON worker.wrk_AT=IT_worker.IT_AT
+	WHERE wrk_br_code=branch_kodikos;
+	
+	INSERT INTO log VALUES(NULL, 'DELETE', 'travel_to', upeuthinos);
+	
+END $
+DELIMITER ;
+
+--UPDATE:
+DELIMITER $
+CREATE TRIGGER log_UPDATE_travel_to AFTER UPDATE ON travel_to
+FOR EACH ROW
+BEGIN 
+	DECLARE upeuthinos char(10);
+	DECLARE branch_kodikos int(11);
+	DECLARE taksidi int(11);
+	
+	SET taksidi=OLD.to_tr_id;
+	
+	SELECT tr_br_code INTO branch_kodikos FROM trip WHERE tr_id=taksidi;
+	
+	SELECT wrk_AT INTO upeuthinos
+	FROM worker
+	INNER JOIN IT_worker ON worker.wrk_AT=IT_worker.IT_AT
+	WHERE wrk_br_code=branch_kodikos;
+	
+	INSERT INTO log VALUES(NULL, 'UPDATE', 'travel_to', upeuthinos);
+	
+END $
+DELIMITER ;
+
+
+-- triggers gia destination
+--INSERT:
+
+DELIMITER $
+CREATE TRIGGER log_INSERT_destination AFTER INSERT ON destination
+FOR EACH ROW
+BEGIN 
+	DECLARE upeuthinos char(10);
+	DECLARE branch_kodikos int(11);
+	DECLARE travel int(11);
+	DECLARE taksidi int(11);
+	
+	SET travel=NEW.dst_location;
+	SELECT to_tr_id INTO taksidi FROM travel_to WHERE to_dst_id=travel;
+	SELECT tr_br_code INTO branch_kodikos FROM trip WHERE tr_id=taksidi;
+	
+	SELECT wrk_AT INTO upeuthinos
+	FROM worker
+	INNER JOIN IT_worker ON worker.wrk_AT=IT_worker.IT_AT
+	WHERE wrk_br_code=branch_kodikos;
+	
+	INSERT INTO log VALUES(NULL, 'INSERT', 'destination', upeuthinos);
+	
+END $
+DELIMITER ;
+
+--DELETE:
+DELIMITER $
+CREATE TRIGGER log_DELETE_destination AFTER DELETE ON destination
+FOR EACH ROW
+BEGIN 
+	DECLARE upeuthinos char(10);
+	DECLARE branch_kodikos int(11);
+	DECLARE travel int(11);
+	DECLARE taksidi int(11);
+	
+	SET travel=OLD.dst_location;
+	SELECT to_tr_id INTO taksidi FROM travel_to WHERE to_dst_id=travel;
+	SELECT tr_br_code INTO branch_kodikos FROM trip WHERE tr_id=taksidi;
+	
+	SELECT wrk_AT INTO upeuthinos
+	FROM worker
+	INNER JOIN IT_worker ON worker.wrk_AT=IT_worker.IT_AT
+	WHERE wrk_br_code=branch_kodikos;
+	
+	INSERT INTO log VALUES(NULL, 'DELETE', 'destination', upeuthinos);
+	
+END $
+DELIMITER ;
+
+--UPDATE:
+DELIMITER $
+CREATE TRIGGER log_UPDATE_destination AFTER UPDATE ON destination
+FOR EACH ROW
+BEGIN 
+	DECLARE upeuthinos char(10);
+	DECLARE branch_kodikos int(11);
+	DECLARE travel int(11);
+	DECLARE taksidi int(11);
+	
+	SET travel=OLD.dst_location;
+	SELECT to_tr_id INTO taksidi FROM travel_to WHERE to_dst_id=travel;
+	SELECT tr_br_code INTO branch_kodikos FROM trip WHERE tr_id=taksidi;
+	
+	SELECT wrk_AT INTO upeuthinos
+	FROM worker
+	INNER JOIN IT_worker ON worker.wrk_AT=IT_worker.IT_AT
+	WHERE wrk_br_code=branch_kodikos;
+	
+	INSERT INTO log VALUES(NULL, 'UPDATE', 'destination', upeuthinos);
+	
+END $
+DELIMITER ;
+
+/*--------------------------------------------------------------------------------------------*/
+
+-- 3.1.3.1 Procedure: 
+INSERT INTO worker VALUES("AB0071", "Leona", "Buchanan", 3000, 0001);
+INSERT INTO worker VALUES("AB0072", "Penelope", "Waters", 3000, 0002);
+INSERT INTO worker VALUES("AB0073", "Cai", "Mclaughlin", 3000, 0003);
+INSERT INTO worker VALUES("AB0074", "Veronica", "Russell", 3000, 0004);
+INSERT INTO worker VALUES("AB0075", "Alex", "Farmer", 3000, 0005);
+INSERT INTO worker VALUES("AB0076", "Sofia", "Escobar", 3000, 0006);
+INSERT INTO worker VALUES("AB0077", "Keisha", "Cohen", 3000, 0007);
+INSERT INTO worker VALUES("AB0078", "Alan", "Hale", 3000, 0008);
+INSERT INTO worker VALUES("AB0079", "Anoushka", "Meyers", 3000, 0009);
+
+INSERT INTO driver VALUES("AB0071", "D", "LOCAL", 10);
+INSERT INTO driver VALUES("AB0072", "A", "ABROAD", 4);
+INSERT INTO driver VALUES("AB0073", "B", "LOCAL", 4);
+INSERT INTO driver VALUES("AB0074", "C", "ABROAD", 6);
+INSERT INTO driver VALUES("AB0075", "A", "LOCAL", 8);
+INSERT INTO driver VALUES("AB0076", "D", "LOCAL", 10);
+INSERT INTO driver VALUES("AB0077", "A", "ABROAD", 4);
+INSERT INTO driver VALUES("AB0078", "B", "LOCAL", 4);
+INSERT INTO driver VALUES("AB0079", "C", "ABROAD", 6);
+
+DELIMITER $
+CREATE PROCEDURE odigos(IN tautotita char(10), IN onoma varchar(20), IN eponymo varchar(20), IN misthos float(7,2), IN adeia ENUM('A', 'B', 'C', 'D'), IN dromologio ENUM('LOCAL', 'ABROAD'), IN empeiria tinyint(4))
+BEGIN
+	DECLARE branch_code int(11);
+	DECLARE noumero INT; 
+	
+	SELECT MIN(num) INTO noumero
+	FROM (SELECT COUNT(dr.drv_AT) num FROM branch b INNER JOIN worker w ON b.br_code=w.wrk_br_code
+	INNER JOIN driver dr ON w.wrk_AT=dr.drv_AT
+	GROUP BY b.br_code) AS sub;
+	
+	SELECT branch.br_code INTO branch_code
+	FROM branch INNER JOIN worker ON branch.br_code=worker.wrk_br_code
+	INNER JOIN driver ON worker.wrk_AT=driver.drv_AT
+	GROUP BY branch.br_code HAVING count(driver.drv_AT)=noumero;
+	
+	select noumero, branch_code;
+	INSERT INTO worker VALUES(tautotita, onoma, eponymo, misthos, branch_code);
+	INSERT INTO driver VALUES(tautotita, adeia, dromologio, empeiria);
+	SELECT 'Eginan ta insert';
+END$
+DELIMITER ;
+
+-- dokimi: 
+CALL odigos("AT0080", "GOGOS", "GOGIA", 1300, 'A', 'LOCAL', 7);
+
+
+-- 3.1.3.2 Procedure: 
+drop procedure if exists trips_check;
+DELIMITER $
+CREATE PROCEDURE trips_check(IN katastima int(11), IN date_ena DATE, IN date_dyo DATE)
+BEGIN
+	DECLARE imerominia_anaxorisis DATE;         -- imerominia anaxorisis ekastote trip
+	DECLARE kratiseis INT;						-- gia na krataw ta reservations kai na vriskw kenes theseis
+	DECLARE imerominia_epistrofis DATE;
+	DECLARE kostos float(7,2);
+	DECLARE megistes_theseis tinyint(4);
+	DECLARE free_theseis tinyint(4);
+	DECLARE onoma_odigou varchar(20);
+	DECLARE eponymo_odigou varchar(20);
+	DECLARE onoma_guide varchar(20);
+	DECLARE eponymo_guide varchar(20);
+	
+	DECLARE epistrofi_trip_id int(11);			-- gia ton cursor
+	DECLARE flag INT DEFAULT 0;
+	
+	DECLARE trip_cursor CURSOR FOR
+	SELECT tr_id FROM trip WHERE trip.tr_br_code=katastima;
+	
+	DECLARE CONTINUE HANDLER FOR NOT FOUND SET flag=1;
+	OPEN trip_cursor;
+	
+	REPEAT 
+		FETCH trip_cursor INTO epistrofi_trip_id;
+		IF(flag=0) THEN
+			SELECT tr_departure INTO imerominia_anaxorisis FROM trip WHERE tr_id=epistrofi_trip_id;						-- departure date kathe trip
+			
+			IF(imerominia_anaxorisis BETWEEN date_ena AND date_dyo) THEN												-- elegxos gia imerominies
+				SELECT tr_departure, tr_return, tr_cost, tr_maxseats INTO imerominia_anaxorisis, imerominia_epistrofis, kostos, megistes_theseis 
+				FROM trip WHERE tr_id=epistrofi_trip_id;
+				
+				SELECT COUNT(*) INTO kratiseis FROM reservation WHERE reservation.res_tr_id=epistrofi_trip_id;
+				SET free_theseis=megistes_theseis-kratiseis;
+				
+				SELECT worker.wrk_name, worker.wrk_lname INTO onoma_odigou, eponymo_odigou
+				FROM worker INNER JOIN driver ON worker.wrk_AT=driver.drv_AT
+				INNER JOIN trip ON driver.drv_AT=trip.tr_drv_AT
+				WHERE trip.tr_id=epistrofi_trip_id;
+				
+				SELECT worker.wrk_name, worker.wrk_lname INTO onoma_guide, eponymo_guide
+				FROM worker INNER JOIN guide ON worker.wrk_AT=guide.gui_AT
+				INNER JOIN trip ON guide.gui_AT=trip.tr_gui_AT
+				WHERE trip.tr_id=epistrofi_trip_id;
+				
+				SELECT imerominia_anaxorisis, imerominia_epistrofis, kratiseis, kostos, megistes_theseis, free_theseis, onoma_odigou, eponymo_odigou, onoma_guide, eponymo_guide;
+			ELSE
+				SELECT "Den yparxoun diathesima taksidia stis imerominies sas gia to sigkekrimeno branch";
+			END IF;
+			
+		END IF;
+	UNTIL(flag=1)
+	END REPEAT;
+	CLOSE trip_cursor;
+END$	
+DELIMITER ;
+
+-- dokimi:
+call trips_check(1, "2000-01-01", "2000-01-03");
+call trips_check(3, "2000-01-01", "2000-01-03");
+
+
+-- 3.1.3.3 Procedure: 
+
+INSERT INTO worker VALUES("AB0080", "Velma", "Kaufman", 2000, 0001);
+INSERT INTO worker VALUES("AB0081", "Sallie", "Roach", 2000, 0002);
+INSERT INTO worker VALUES("AB0082", "Leonardo", "Branch", 2000, 0003);
+INSERT INTO worker VALUES("AB0083", "Ayub", "Hamilton", 2000, 0004);
+
+INSERT INTO admin VALUES("AB0080", "ADMINISTRATIVE", "Phd: Dokimastikos");
+INSERT INTO admin VALUES("AB0081", "ADMINISTRATIVE", "Phd: Dokimastikos");
+INSERT INTO admin VALUES("AB0082", "ADMINISTRATIVE", "Phd: Dokimastikos");
+INSERT INTO admin VALUES("AB0083", "ADMINISTRATIVE", "Phd: Dokimastikos");
+
+drop procedure if exists vasilias;
+DELIMITER $
+CREATE PROCEDURE vasilias(IN onoma varchar(20), IN eponymo varchar(20))
+BEGIN
+	DECLARE katastima INT;
+	DECLARE onoma_administrator_katastimatos VARCHAR(25);
+	DECLARE eponymo_administrator_katastimatos VARCHAR(25);
+	DECLARE tautotita_eisodou char(10);
+
+	SELECT worker.wrk_br_code INTO katastima FROM worker WHERE worker.wrk_name=onoma AND worker.wrk_lname=eponymo;
+	
+	SELECT worker.wrk_name, worker.wrk_lname INTO onoma_administrator_katastimatos, eponymo_administrator_katastimatos
+	FROM worker INNER JOIN admin ON worker.wrk_AT=admin.adm_AT
+	INNER JOIN manages ON admin.adm_AT=manages.mng_adm_AT
+	INNER JOIN branch ON manages.mng_br_code=branch.br_code
+	WHERE worker.wrk_br_code=katastima AND adm_type='ADMINISTRATIVE';
+	
+	SELECT worker.wrk_AT INTO tautotita_eisodou FROM worker WHERE worker.wrk_name=onoma AND worker.wrk_lname=eponymo;
+	
+	
+	IF((onoma LIKE onoma_administrator_katastimatos) AND (eponymo LIKE eponymo_administrator_katastimatos)) THEN
+		SELECT 'De mporei na ginei diagrafi tou administrator';
+	ELSE
+		DELETE FROM admin WHERE adm_AT=tautotita_eisodou;
+		SELECT "Egine h diagrafi";
+	END IF;
+	
+END$
+DELIMITER ;	
+
+-- dokimi:
+call vasilias("Anton", "Gonzalez");
+call vasilias("Sallie", "Roach");
+
+-- 3.1.3.4a Procedure:
+drop procedure if exists kratiseis;
+DELIMITER $
+CREATE PROCEDURE kratiseis(IN timi_ena float(7,2), IN timi_dyo float(7,2), OUT loops INT)
+BEGIN
+block1: BEGIN
+	
+		DECLARE epistrofi_onomatos varchar(20);
+		DECLARE flag1 INT DEFAULT 0;
+	
+		DECLARE bcursor CURSOR FOR
+		SELECT reservation_offers.pelatis_first_name 
+		FROM reservation_offers 
+		WHERE prokatavoli BETWEEN timi_ena AND timi_dyo;
+		
+		DECLARE CONTINUE HANDLER FOR NOT FOUND SET flag1=1;
+		OPEN bcursor;
+		
+		SET loops=0;
+		
+		REPEAT
+			FETCH bcursor INTO epistrofi_onomatos;
+		
+block2: BEGIN 
+		
+		DECLARE epistrofi_eponymou varchar(20);
+		DECLARE flag2 INT DEFAULT 0;
+		
+		DECLARE lcursor CURSOR FOR
+		SELECT pelatis_lname FROM reservation_offers WHERE pelatis_first_name=epistrofi_onomatos AND prokatavoli BETWEEN timi_ena AND timi_dyo;
+		
+		DECLARE CONTINUE HANDLER FOR NOT FOUND SET flag2=1;
+		OPEN lcursor;
+		
+		REPEAT
+			FETCH lcursor INTO epistrofi_eponymou;
+			
+			IF(flag2=0) THEN
+				SELECT epistrofi_onomatos, epistrofi_eponymou;
+			END IF;
+		UNTIL(flag2=1)
+		END REPEAT;
+		
+		CLOSE lcursor;
+		END block2;
+		
+		SET loops=loops+1;
+		UNTIL(flag1=1)
+		END REPEAT;
+	
+		CLOSE bcursor;
+		END block1;
+END $
+DELIMITER ;
+	
+-- dokimi:
+select count(*) from reservation_offers where prokatavoli BETWEEN 60 AND 61;
+
+-- hash: χασαρω εδω ωστε να ερχονται πιο γρηγορα τα ονοματα και τα επιθετα γιατι αυτα ειναι που καθυστερουν
+CREATE INDEX onomata ON reservation_offers(pelatis_first_name, pelatis_lname);
+
+-- 3.1.3.4b Procedure:	
+drop procedure if exists epitheta;
+DELIMITER $
+CREATE PROCEDURE epitheta(IN eponymo varchar(20))
+BEGIN
+block1: BEGIN
+
+		DECLARE epistrofi_first_name varchar(20);
+		DECLARE flag1 INT DEFAULT 0;
+	
+		DECLARE bcursor CURSOR FOR
+		SELECT pelatis_first_name FROM reservation_offers WHERE pelatis_lname=eponymo;
+	
+		DECLARE CONTINUE HANDLER FOR NOT FOUND SET flag1=1;
+		OPEN bcursor;
+	
+		REPEAT
+			FETCH bcursor INTO epistrofi_first_name;
+
+block2: BEGIN
+		
+		DECLARE epistrofi_offer varchar(20);
+		DECLARE flag2 INT DEFAULT 0;
+		
+		DECLARE lcursor CURSOR FOR
+		SELECT offer_id FROM reservation_offers where pelatis_lname=eponymo AND pelatis_first_name=epistrofi_first_name;
+		
+		DECLARE CONTINUE HANDLER FOR NOT FOUND SET flag2=1;
+		OPEN lcursor;
+		
+		REPEAT
+			FETCH lcursor INTO epistrofi_offer;
+			IF(flag1=0) THEN
+				SELECT epistrofi_first_name, eponymo, epistrofi_offer;
+				INSERT INTO temp2_epitheta VALUES(NULL, epistrofi_first_name, eponymo, epistrofi_offer);
+			END IF;
+			UNTIL(flag2=1)
+		END REPEAT;
+		
+		CLOSE lcursor;
+		END block2;
+		
+		UNTIL(flag1=1)
+		END REPEAT;
+	
+		CLOSE bcursor;
+		END block1;
+END $
+DELIMITER ;
+			
+			
+-- hash:
+CREATE INDEX onomata_offers ON reservation_offers(pelatis_first_name, pelatis_lname, offer_id);
+
+/*-------------------------------------------------------------*/
+
+CREATE TABLE login_credentials(
+	login_username varchar(20),
+	login_password varchar(10),
+	PRIMARY KEY(login_password)
+	);
+
+INSERT INTO login_credentials VALUES("Espinoza", "k1292");
+INSERT INTO login_credentials VALUES("Larson", "a7621");
+INSERT INTO login_credentials VALUES("Lin", "i8213");
+INSERT INTO login_credentials VALUES("Fisher", "a3214");
+INSERT INTO login_credentials VALUES("Hardin", "a5221");
+INSERT INTO login_credentials VALUES("Mathis", "l0924");
+INSERT INTO login_credentials VALUES("Decker", "b2421");
+INSERT INTO login_credentials VALUES("Murray", "w2245");
+INSERT INTO login_credentials VALUES("Rivas", "r2156");
+INSERT INTO login_credentials VALUES("Steele", "u7777");
+
+
+INSERT INTO worker VALUES("AB0100", "DOKIMI", "1", 3000, 0010);
+INSERT INTO IT_worker VALUES("AB0100", "1", "2019-01-20", "2023-01-20");
+INSERT INTO login_credentials VALUES("1", "1");
+
+-- TABLE GIA NA EXW TIN PLIROFORIA APO TO PROCEDURE STO GUI
+CREATE table temp1_trips_check(
+	
+	ID INT AUTO_INCREMENT,
+	anaxorisi DATE,
+	epistrofi DATE,
+	sinolo_kratisewn INT,
+	kostos FLOAT(7,2),
+	megistes_theseis INT,
+	free_theseis INT,
+	onoma_odigou VARCHAR(20),
+	eponymo_odigou VARCHAR(20),
+	onoma_guide VARCHAR(20),
+	eponymo_guide VARCHAR(20),
+	PRIMARY KEY(ID)
+);
+
+-- PROCEDURE GIA TRUNCATE KAI EKTYPWSH STO GUI
+drop procedure if exists procedure_trips_check;
+DELIMITER $
+CREATE PROCEDURE procedure_trips_check()
+BEGIN
+
+SELECT * FROM temp1_trips_check;
+
+TRUNCATE temp1_trips_check;
+
+END$
+delimiter ;
+
+ 
+-- TABLE GIA NA EXW TIN PLIROFORIA APO TO PROCEDURE STO GUI
+CREATE table temp2_epitheta(
+	
+	ID INT AUTO_INCREMENT,
+	onoma VARCHAR(20),
+	eponymo VARCHAR(20),
+	offer INT,
+	PRIMARY KEY(ID)
+);
+
+-- PROCEDURE GIA TRUNCATE KAI EKTYPWSH STO GUI
+drop procedure if exists procedure_epitheta;
+DELIMITER $
+CREATE PROCEDURE procedure_epitheta()
+BEGIN
+
+SELECT * FROM temp2_epitheta;
+
+TRUNCATE temp2_epitheta;
+
+END$
+delimiter ;
+
+-- INSERTIONSSSSSSSSSSSSSSS
+-- branch
+INSERT INTO branch VALUES(0001, "Korinthou", 30, "Patras");
+INSERT INTO branch VALUES(0002, "Ermou", 24, "Athens");
+INSERT INTO branch VALUES(0003, "Aristotelous", 8, "Thessaloniki");
+INSERT INTO branch VALUES(0004, "Dimokratias", 12, "Nafplio");
+INSERT INTO branch VALUES(0005, "Papandreou Andreas", 6, "Chania");
+
+INSERT INTO branch VALUES(0006, "Maizonos", 31, "Patras");
+INSERT INTO branch VALUES(0007, "Ermou", 26, "Athens");
+INSERT INTO branch VALUES(0008, "Karaiskaki", 9, "Agrinio");
+INSERT INTO branch VALUES(0009, "Ellispontou", 19, "Palamas");
+INSERT INTO branch VALUES(0010, "Parigorias", 8, "Argos");
+
+-- phones
+INSERT INTO phones VALUES(0001, "6900000000");
+INSERT INTO phones VALUES(0002, "6911111111");
+INSERT INTO phones VALUES(0003, "6922222222");
+INSERT INTO phones VALUES(0004, "6933333333");
+INSERT INTO phones VALUES(0005, "6944444444");
+
+INSERT INTO phones VALUES(0006, "6955555555");
+INSERT INTO phones VALUES(0007, "6966666666");
+INSERT INTO phones VALUES(0008, "6977777777");
+INSERT INTO phones VALUES(0009, "6988888888");
+INSERT INTO phones VALUES(0010, "6999999999");
+
+-- workers: drivers, guides: 1 driver, 1 guide gia kather branch
+INSERT INTO worker VALUES("AB0002", "Georgios", "Mermigkis", 1500, 0001);
+INSERT INTO worker VALUES("AB0003", "Dimitrios", "Giannakopoulos", 1300, 0001);
+
+INSERT INTO worker VALUES("AB0004", "Nikolaos", "Mavrias", 1100, 0002);
+INSERT INTO worker VALUES("AB0005", "Valantis", "Liakopoulos", 500, 0002);
+
+INSERT INTO worker VALUES("AB0007", "Grigoris", "Mergkakis", 1501, 0003);
+INSERT INTO worker VALUES("AB0008", "Dionisis", "Giannopoulos", 1301, 0003);
+
+INSERT INTO worker VALUES("AB0009", "Nikiforos", "Katsonis", 1101, 0004);
+INSERT INTO worker VALUES("AB0010", "Vasilis", "Balasis", 501, 0004);
+
+INSERT INTO worker VALUES("AB0012", "Giorgos", "Kexrakos", 1503, 0005);
+INSERT INTO worker VALUES("AB0013", "Leuteris", "Nikolaou", 1304, 0005);
+
+INSERT INTO worker VALUES("AB0014", "Penny", "Vlanti", 1105, 0006);
+INSERT INTO worker VALUES("AB0015", "Xristos", "Lakakis", 506, 0006);
+
+INSERT INTO worker VALUES("AB0017", "Kyriakos", "Kyriakou", 1508, 0007);
+INSERT INTO worker VALUES("AB0018", "Spuros", "Foteinos", 1309, 0007);
+
+INSERT INTO worker VALUES("AB0019", "Pipis", "Skoteinos", 1106, 0008);
+INSERT INTO worker VALUES("AB0020", "Giannis", "Lamperos", 510, 0008);
+
+INSERT INTO worker VALUES("AB0022", "Antonis", "Remos", 2022, 0009);
+INSERT INTO worker VALUES("AB0023", "Richardos", "Achileopoulos", 2000, 0009);
+
+INSERT INTO worker VALUES("AB0024", "Ektoras", "Triantos", 2010, 0010);
+INSERT INTO worker VALUES("AB0025", "Eleni", "Dimitriou", 300, 0010);
+
+-- workers: admins, gia kathe triada vazw 1 administrator, 1 logistics, 1 accounting
+-- wste kather branch na exei apo enan
+INSERT INTO worker VALUES("AB0031", "Anton", "Gonzalez", 2000, 0001);
+INSERT INTO worker VALUES("AB0032", "Remington", "Gibbs", 1600, 0001);
+INSERT INTO worker VALUES("AB0033", "Delaney", "Frank", 1600, 0001);
+
+INSERT INTO worker VALUES("AB0034", "Finnegan", "Stark", 2000, 0002);
+INSERT INTO worker VALUES("AB0035", "Raquel", "Craig", 1600, 0002);
+INSERT INTO worker VALUES("AB0036", "Gael", "Ashley", 1600, 0002);
+
+INSERT INTO worker VALUES("AB0037", "Jaden", "Clements", 2000, 0003);
+INSERT INTO worker VALUES("AB0038", "Kaitlyn", "Mckinney", 1600, 0003);
+INSERT INTO worker VALUES("AB0039", "Valentino", "Sellers", 1600, 0003);
+
+INSERT INTO worker VALUES("AB0040", "Armani", "Mcmahon", 2000, 0004);
+INSERT INTO worker VALUES("AB0041", "Braylon", "Matthews", 1600, 0004);
+INSERT INTO worker VALUES("AB0042", "Isaiah", "Vincent", 1600, 0004);
+
+INSERT INTO worker VALUES("AB0043", "Lydia", "Odom", 2000, 0005);
+INSERT INTO worker VALUES("AB0044", "Jabari", "Trevino", 1600, 0005);
+INSERT INTO worker VALUES("AB0045", "Adriana", "Rangel", 1600, 0005);
+
+INSERT INTO worker VALUES("AB0046", "Ashton", "Vang", 2000, 0006);
+INSERT INTO worker VALUES("AB0047", "Kaden", "Eaton", 1600, 0006);
+INSERT INTO worker VALUES("AB0048", "Ivan", "Berger", 1600, 0006);
+
+INSERT INTO worker VALUES("AB0049", "Iyana", "Rubio", 2000, 0007);
+INSERT INTO worker VALUES("AB0050", "Kassidy", "Tanner", 1600, 0007);
+INSERT INTO worker VALUES("AB0051", "Cameron", "Ayers", 1600, 0007);
+
+INSERT INTO worker VALUES("AB0052", "Alexa", "Galloway", 2000, 0008);
+INSERT INTO worker VALUES("AB0053", "Brynn", "Garrett", 1600, 0008);
+INSERT INTO worker VALUES("AB0054", "Azaria", "Levy", 1600, 0008);
+
+INSERT INTO worker VALUES("AB0055", "Davis", "Santana", 2000, 0009);
+INSERT INTO worker VALUES("AB0056", "Zavier", "Mooney", 1600, 0009);
+INSERT INTO worker VALUES("AB0057", "Ellie", "Colon", 1600, 0009);
+
+INSERT INTO worker VALUES("AB0058", "Kaiya", "Mccullough", 2000, 0010);
+INSERT INTO worker VALUES("AB0059", "Cullen", "Crawford", 1600, 0010);
+INSERT INTO worker VALUES("AB0060", "Catalina", "Ware", 1600, 0010);
+
+-- admins: ana triada aforoun ena sigkekrimeno branch
+INSERT INTO admin VALUES("AB0031", "ADMINISTRATIVE", "Phd: Business Administration");
+INSERT INTO admin VALUES("AB0032", "ACCOUNTING", "Master: Accounting");
+INSERT INTO admin VALUES("AB0033", "LOGISTICS", "Master: Logistics");
+
+INSERT INTO admin VALUES("AB0034", "ADMINISTRATIVE", "Phd: Business Administration");
+INSERT INTO admin VALUES("AB0035", "ACCOUNTING", "Master: Accounting");
+INSERT INTO admin VALUES("AB0036", "LOGISTICS", "Master: Logistics");
+
+INSERT INTO admin VALUES("AB0037", "ADMINISTRATIVE", "Phd: Business Administration");
+INSERT INTO admin VALUES("AB0038", "ACCOUNTING", "Master: Accounting");
+INSERT INTO admin VALUES("AB0039", "LOGISTICS", "Master: Logistics");
+
+INSERT INTO admin VALUES("AB0040", "ADMINISTRATIVE", "Phd: Business Administration");
+INSERT INTO admin VALUES("AB0041", "ACCOUNTING", "Master: Accounting");
+INSERT INTO admin VALUES("AB0042", "LOGISTICS", "Master: Logistics");
+
+INSERT INTO admin VALUES("AB0043", "ADMINISTRATIVE", "Phd: Business Administration");
+INSERT INTO admin VALUES("AB0044", "ACCOUNTING", "Master: Accounting");
+INSERT INTO admin VALUES("AB0045", "LOGISTICS", "Master: Logistics");
+
+INSERT INTO admin VALUES("AB0046", "ADMINISTRATIVE", "Phd: Business Administration");
+INSERT INTO admin VALUES("AB0047", "ACCOUNTING", "Master: Accounting");
+INSERT INTO admin VALUES("AB0048", "LOGISTICS", "Master: Logistics");
+
+INSERT INTO admin VALUES("AB0049", "ADMINISTRATIVE", "Phd: Business Administration");
+INSERT INTO admin VALUES("AB0050", "ACCOUNTING", "Master: Accounting");
+INSERT INTO admin VALUES("AB0051", "LOGISTICS", "Master: Logistics");
+
+INSERT INTO admin VALUES("AB0052", "ADMINISTRATIVE", "Phd: Business Administration");
+INSERT INTO admin VALUES("AB0053", "ACCOUNTING", "Master: Accounting");
+INSERT INTO admin VALUES("AB0054", "LOGISTICS", "Master: Logistics");
+
+INSERT INTO admin VALUES("AB0055", "ADMINISTRATIVE", "Phd: Business Administration");
+INSERT INTO admin VALUES("AB0056", "ACCOUNTING", "Master: Accounting");
+INSERT INTO admin VALUES("AB0057", "LOGISTICS", "Master: Logistics");
+
+INSERT INTO admin VALUES("AB0058", "ADMINISTRATIVE", "Phd: Business Administration");
+INSERT INTO admin VALUES("AB0059", "ACCOUNTING", "Master: Accounting");
+INSERT INTO admin VALUES("AB0060", "LOGISTICS", "Master: Logistics");
+
+-- Exw 10 admins typou "Administrator", enan gia kathe apo ta 10 branch 
+INSERT INTO manages VALUES("AB0031", 0001);
+INSERT INTO manages VALUES("AB0034", 0002);
+INSERT INTO manages VALUES("AB0037", 0003);
+INSERT INTO manages VALUES("AB0040", 0004);
+INSERT INTO manages VALUES("AB0043", 0005);
+INSERT INTO manages VALUES("AB0046", 0006);
+INSERT INTO manages VALUES("AB0049", 0007);
+INSERT INTO manages VALUES("AB0052", 0008);
+INSERT INTO manages VALUES("AB0055", 0009);
+INSERT INTO manages VALUES("AB0058", 0010);
+
+-- se kathe branch vazw enan driver
+INSERT INTO driver VALUES("AB0002", "D", "LOCAL", 10);
+INSERT INTO driver VALUES("AB0004", "A", "ABROAD", 4);
+INSERT INTO driver VALUES("AB0007", "B", "LOCAL", 4);
+INSERT INTO driver VALUES("AB0009", "C", "ABROAD", 6);
+INSERT INTO driver VALUES("AB0012", "A", "LOCAL", 8);
+INSERT INTO driver VALUES("AB0014", "D", "LOCAL", 10);
+INSERT INTO driver VALUES("AB0017", "A", "ABROAD", 4);
+INSERT INTO driver VALUES("AB0019", "B", "LOCAL", 4);
+INSERT INTO driver VALUES("AB0022", "C", "ABROAD", 6);
+INSERT INTO driver VALUES("AB0024", "A", "LOCAL", 8);
+
+-- se kather branch enan guide
+INSERT INTO guide VALUES("AB0003", "Fluent, friendly, prefers winter destinations.");
+INSERT INTO guide VALUES("AB0005", "I love culture and music.");
+INSERT INTO guide VALUES("AB0008", "I love drugs and smoking.");
+INSERT INTO guide VALUES("AB0010", "Love basketball and football.");
+INSERT INTO guide VALUES("AB0013", "Social, friendly, prefers summer destinations.");
+INSERT INTO guide VALUES("AB0015", "Enviroment friendly, big fan of Volleyball.");
+INSERT INTO guide VALUES("AB0018", "Stable character, friendly, prefers fall destionations.");
+INSERT INTO guide VALUES("AB0020", "I love physics and music.");
+INSERT INTO guide VALUES("AB0023", "Big fan of religion.");
+INSERT INTO guide VALUES("AB0025", "Very nice sense of humor, prefers weekend exlorations.");
+
+-- gia tis languages
+INSERT INTO languages VALUES("AB0003", "English, German, Spanish");
+INSERT INTO languages VALUES("AB0005", "Eglish, French, Norwegian");
+INSERT INTO languages VALUES("AB0008", "Eglish, Spanish, Norwegian");
+INSERT INTO languages VALUES("AB0010", "Eglish, French, Italian");
+INSERT INTO languages VALUES("AB0013", "Eglish, Greek, Norwegian");
+INSERT INTO languages VALUES("AB0015", "Eglish, Chinese, French");
+INSERT INTO languages VALUES("AB0018", "Eglish, French, Spanish");
+INSERT INTO languages VALUES("AB0020", "Eglish, French, Albanian");
+INSERT INTO languages VALUES("AB0023", "Eglish, French, German");
+INSERT INTO languages VALUES("AB0025", "Eglish, Italian, Greek");
+
+-- gia ta trips, id, departure, return,  int maxseats, float cost, int br_code, char guide, char driver
+-- se kathe branch vazw 3 trips, kathe branch exei diko tou driver, diko tou guide, to prosexw
+INSERT INTO trip VALUES(NULL,'2000-01-01 00:01:00','2000-01-02 01:20:00', 1, 1020.0, 0001,'AB0003','AB0002');
+INSERT INTO trip VALUES(NULL,'2000-01-02 18:02:00','2000-02-03 02:30:00', 3, 2030.0, 0001,'AB0003','AB0002');
+INSERT INTO trip VALUES(NULL,'2000-01-03 15:01:00','2000-03-02 03:20:00', 2, 1030.0, 0001,'AB0003','AB0002');
+INSERT INTO trip VALUES(NULL,'2000-01-04 17:01:00','2000-04-02 04:20:00', 3, 1050.0, 0002,'AB0005','AB0004');
+INSERT INTO trip VALUES(NULL,'2000-01-05 16:01:00','2000-05-02 05:20:00', 4, 1060.0, 0002,'AB0005','AB0004');
+INSERT INTO trip VALUES(NULL,'2000-01-06 15:01:00','2000-06-02 06:20:00', 5, 1001.0, 0002,'AB0005','AB0004');
+INSERT INTO trip VALUES(NULL,'2000-01-07 00:02:00','2000-07-03 07:30:00', 3, 2002.0, 0003,'AB0008','AB0007');
+INSERT INTO trip VALUES(NULL,'2000-01-08 14:01:00','2000-08-02 08:20:00', 1, 1003.0, 0003,'AB0008','AB0007');
+INSERT INTO trip VALUES(NULL,'2000-01-09 13:01:00','2000-09-02 09:20:00', 6, 1004.0, 0003,'AB0008','AB0007');
+INSERT INTO trip VALUES(NULL,'2000-01-10 12:01:00','2000-10-02 10:20:00', 1, 1001.0, 0004,'AB0010','AB0009');
+INSERT INTO trip VALUES(NULL,'2000-01-11 11:01:00','2000-11-02 11:20:00', 2, 1006.0, 0004,'AB0010','AB0009');
+INSERT INTO trip VALUES(NULL,'2000-01-12 09:02:00','2000-12-03 12:30:00', 2, 2007.0, 0004,'AB0010','AB0009');
+
+INSERT INTO trip VALUES(NULL,'2000-01-13 08:01:00','2000-01-04 13:20:00', 1, 1008.0, 0005,'AB0013','AB0012');
+INSERT INTO trip VALUES(NULL,'2000-01-14 08:01:00','2000-01-06 14:20:00', 4, 1008.0, 0005,'AB0013','AB0012');
+INSERT INTO trip VALUES(NULL,'2000-01-15 07:01:00','2000-01-12 15:20:00', 7, 1009.0, 0005,'AB0013','AB0012');
+INSERT INTO trip VALUES(NULL,'2000-01-16 00:01:00','2000-01-03 16:20:00', 2, 1200.0, 0006,'AB0015','AB0014');
+INSERT INTO trip VALUES(NULL,'2000-01-17 05:02:00','2000-01-04 17:30:00', 4, 2300.0, 0006,'AB0015','AB0014');
+INSERT INTO trip VALUES(NULL,'2000-01-18 07:01:00','2000-01-06 18:20:00', 2, 1400.0, 0006,'AB0015','AB0014');
+INSERT INTO trip VALUES(NULL,'2000-01-19 06:01:00','2000-01-06 19:20:00', 3, 1600.0, 0007,'AB0018','AB0017');
+INSERT INTO trip VALUES(NULL,'2000-01-20 05:01:00','2000-01-09 20:20:00', 3, 1700.0, 0007,'AB0018','AB0017');
+INSERT INTO trip VALUES(NULL,'2000-01-21 04:01:00','2000-01-02 21:20:00', 6, 2000.0, 0007,'AB0018','AB0017');
+INSERT INTO trip VALUES(NULL,'2000-01-22 03:02:00','2000-01-03 22:30:00', 7, 3000.0, 0008,'AB0020','AB0019');
+INSERT INTO trip VALUES(NULL,'2000-01-23 02:01:00','2000-01-03 23:20:00', 8, 5000.0, 0008,'AB0020','AB0019');
+INSERT INTO trip VALUES(NULL,'2000-01-24 01:01:00','2000-01-08 00:20:00', 8, 4000.0, 0008,'AB0020','AB0019');
+
+INSERT INTO trip VALUES(NULL,'2000-01-25 03:01:00','2000-01-11 01:20:00', 9, 6000.0, 0009,'AB0023','AB0022');
+INSERT INTO trip VALUES(NULL,'2000-01-26 02:01:00','2000-01-05 02:20:00', 2, 7000.0, 0009,'AB0023','AB0022');
+INSERT INTO trip VALUES(NULL,'2000-01-27 01:02:00','2000-01-06 03:30:00', 3, 7001.0, 0009,'AB0023','AB0022');
+INSERT INTO trip VALUES(NULL,'2000-01-28 03:01:00','2000-01-09 04:20:00', 2, 8000.0, 0010,'AB0025','AB0024');
+INSERT INTO trip VALUES(NULL,'2000-01-29 02:01:00','2000-01-07 05:20:00', 1, 9000.0, 0010,'AB0025','AB0024');
+INSERT INTO trip VALUES(NULL,'2000-01-30 01:01:00','2000-01-08 06:20:00', 4, 9010.0, 0010,'AB0025','AB0024');
+
+-- gia ta event
+INSERT INTO event VALUES(NULL, '2000-02-01 00:01:00', '2001-01-02 01:10:00', 'Party'); 
+INSERT INTO event VALUES(NULL, '2000-03-01 00:02:00', '2002-01-02 01:20:00', 'Rock Party');
+INSERT INTO event VALUES(NULL, '2000-04-01 00:03:00', '2003-01-02 01:30:00', 'Festival');
+INSERT INTO event VALUES(NULL, '2000-05-01 00:04:00', '2004-01-02 01:40:00', 'Cinema');
+INSERT INTO event VALUES(NULL, '2000-06-01 00:05:00', '2005-01-02 01:50:00', 'Dancing');
+INSERT INTO event VALUES(NULL, '2000-07-01 00:06:00', '2006-01-02 01:59:00', 'Pole Dancing');
+INSERT INTO event VALUES(NULL, '2000-08-01 00:07:00', '2007-01-02 01:00:00', 'Theatre');
+INSERT INTO event VALUES(NULL, '2000-09-01 00:08:00', '2008-01-02 02:00:00', 'Sports Day');
+INSERT INTO event VALUES(NULL, '2000-10-01 00:09:00', '2009-01-02 03:20:00', 'Pool Party');
+INSERT INTO event VALUES(NULL, '2000-11-01 00:10:00', '2010-01-02 04:00:00', 'Beach Party');
+INSERT INTO event VALUES(NULL, '2000-01-01 00:21:00', '2000-02-02 05:20:00', 'Tommoroland');
+INSERT INTO event VALUES(NULL, '2000-01-02 00:22:00', '2000-03-02 06:20:00', 'Students party');
+INSERT INTO event VALUES(NULL, '2000-01-03 00:23:00', '2000-04-02 07:20:00', 'Party'); 
+INSERT INTO event VALUES(NULL, '2000-01-04 00:24:00', '2000-05-02 08:20:00', 'Rock Party');
+INSERT INTO event VALUES(NULL, '2000-01-05 00:25:00', '2000-06-02 09:20:00', 'Festival');
+INSERT INTO event VALUES(NULL, '2000-01-06 00:26:00', '2000-07-02 10:20:00', 'Cinema');
+INSERT INTO event VALUES(NULL, '2000-01-07 00:27:00', '2000-08-02 11:20:00', 'Dancing');
+INSERT INTO event VALUES(NULL, '2000-01-08 00:28:00', '2000-09-02 12:20:00', 'Pole Dancing');
+INSERT INTO event VALUES(NULL, '2000-01-09 00:29:00', '2000-10-02 13:20:00', 'Theatre');
+INSERT INTO event VALUES(NULL, '2000-01-10 00:30:00', '2000-11-02 14:20:00', 'Sports Day');
+INSERT INTO event VALUES(NULL, '2000-01-11 00:31:00', '2000-12-02 15:20:00', 'Pool Party');
+INSERT INTO event VALUES(NULL, '2000-01-12 00:32:00', '2000-01-03 16:20:00', 'Beach Party');
+INSERT INTO event VALUES(NULL, '2000-01-13 00:33:00', '2000-01-04 17:20:00', 'Students party'); 
+INSERT INTO event VALUES(NULL, '2000-01-14 00:34:00', '2000-01-05 18:20:00', 'Rock Party');
+INSERT INTO event VALUES(NULL, '2000-01-15 00:35:00', '2000-01-06 19:20:00', 'Festival');
+INSERT INTO event VALUES(NULL, '2000-01-16 00:36:00', '2000-01-07 20:20:00', 'Tommoroland');
+INSERT INTO event VALUES(NULL, '2000-01-17 00:37:00', '2000-01-08 21:20:00', 'Dancing');
+INSERT INTO event VALUES(NULL, '2000-01-18 00:38:00', '2000-01-09 22:20:00', 'Pole Dancing');
+INSERT INTO event VALUES(NULL, '2000-01-19 00:39:00', '2000-01-10 23:20:00', 'Tommoroland');
+INSERT INTO event VALUES(NULL, '2000-01-20 00:40:00', '2000-01-11 00:20:00', 'Sports Day');
+
+-- gia to reservation, mia kratimeni thesi se kathe trip.
+INSERT INTO reservation VALUES(1, 1, 'Mitsos', 'Papantwniou', 'ADULT');
+INSERT INTO reservation VALUES(2, 3, 'Giwrgos', 'Papatrexas', 'MINOR');
+INSERT INTO reservation VALUES(3, 7, 'Dimitris', 'Kwnstadaras', 'ADULT');
+INSERT INTO reservation VALUES(4, 2, 'Panagiota', 'Dimitriou', 'MINOR');
+INSERT INTO reservation VALUES(5, 5, 'Panagiotis', 'Eksintaris', 'ADULT');
+INSERT INTO reservation VALUES(6, 2, 'Nikolas', 'Sarantaris', 'MINOR');
+INSERT INTO reservation VALUES(7, 5, 'Maria', 'Ioannou', 'ADULT');
+INSERT INTO reservation VALUES(8, 7, 'Giannis', 'Antetokounmpo', 'MINOR');
+INSERT INTO reservation VALUES(9, 9, 'Achileas', 'Paparis', 'ADULT');
+INSERT INTO reservation VALUES(10, 10, 'Ektoras', 'Troias', 'MINOR');
+INSERT INTO reservation VALUES(11, 2, 'Andreas', 'Mousatos', 'ADULT');
+INSERT INTO reservation VALUES(12, 4, 'Antonis', 'Antoniou', 'ADULT');
+INSERT INTO reservation VALUES(13, 6, 'Labros', 'Kupraiou', 'MINOR');
+INSERT INTO reservation VALUES(14, 7, 'Paris', 'Papaxatzis', 'ADULT');
+INSERT INTO reservation VALUES(15, 1, 'Grigoris', 'Theologos', 'MINOR');
+INSERT INTO reservation VALUES(16, 8, 'Marios', 'Takis', 'ADULT');
+INSERT INTO reservation VALUES(17, 9, 'Martha', 'Karagianni', 'ADULT');
+INSERT INTO reservation VALUES(18, 2, 'Mika', 'Iliopoulou', 'MINOR');
+INSERT INTO reservation VALUES(19, 8, 'Lilian', 'Kalantzi', 'ADULT');
+INSERT INTO reservation VALUES(20, 9, 'Vasilis', 'Xristodoulou', 'MINOR');
+INSERT INTO reservation VALUES(21, 6, 'Xristos', 'Giannakopoulos', 'ADULT');
+INSERT INTO reservation VALUES(22, 4, 'Stamatis', 'Dimitriou', 'ADULT');
+INSERT INTO reservation VALUES(23, 3, 'Giorgos', 'Megalooikonomou', 'MINOR');
+INSERT INTO reservation VALUES(24, 1, 'Nikos', 'Stagakis', 'ADULT');
+INSERT INTO reservation VALUES(25, 3, 'Leuteris', 'Vakoulis', 'MINOR');
+INSERT INTO reservation VALUES(26, 1, 'Savvas', 'Tomaras', 'ADULT');
+INSERT INTO reservation VALUES(27, 2, 'Kyriakos', 'Galanos', 'ADULT');
+INSERT INTO reservation VALUES(28, 7, 'Pipis', 'Tsoukala', 'MINOR');
+INSERT INTO reservation VALUES(29, 2, 'Spuraklas', 'Gianni', 'ADULT');
+INSERT INTO reservation VALUES(30, 11, 'Giotara', 'Papatrixa', 'MINOR');
+
+-- gia to destination
+INSERT INTO destination VALUES(NULL, 'Jamaika', 'exotic place', 'ABROAD', 'Jamaican', 1);
+INSERT INTO destination VALUES(NULL, 'Tinos', 'exotic island', 'LOCAL', 'Greek', 2);
+INSERT INTO destination VALUES(NULL, 'Texas', 'perfect place for 2 weeks', 'ABROAD', 'English', 3);
+INSERT INTO destination VALUES(NULL, 'Athens', 'nice capital of Greece', 'LOCAL', 'Greek', 4);
+INSERT INTO destination VALUES(NULL, 'Houston', ' a usual american state', 'ABROAD', 'English', 5);
+INSERT INTO destination VALUES(NULL, 'Milos', 'romantic island', 'LOCAL', 'Greek', 6);
+INSERT INTO destination VALUES(NULL, 'Toronto', 'exotic place in the winter', 'ABROAD', 'English', 7);
+INSERT INTO destination VALUES(NULL, 'Andros', 'big island for tour', 'LOCAL', 'Greek', 8);
+INSERT INTO destination VALUES(NULL, 'Brazilia', 'football lovers', 'ABROAD', 'Brazilian', 9);
+INSERT INTO destination VALUES(NULL, 'Thessaloniki', 'winter destination', 'LOCAL', 'Greek', 10);
+INSERT INTO destination VALUES(NULL, 'Mexico', 'very nice place to visit', 'ABROAD', 'Spanish', 11);
+INSERT INTO destination VALUES(NULL, 'Naxos', 'perfect beaches', 'LOCAL', 'Greek', 12);
+INSERT INTO destination VALUES(NULL, 'Madrid', 'the capital of Spain!', 'ABROAD', 'Spanish', 13);
+INSERT INTO destination VALUES(NULL, 'Paros', 'place for young people and couples', 'LOCAL', 'Greek', 14);
+INSERT INTO destination VALUES(NULL, 'Berlin', 'the best european clubs', 'ABROAD', 'German', 15);
+INSERT INTO destination VALUES(NULL, 'Ios', 'the best place to party', 'LOCAL', 'Greek', 16);
+INSERT INTO destination VALUES(NULL, 'Vienna', 'romantic place', 'ABROAD', 'German', 17);
+INSERT INTO destination VALUES(NULL, 'Nafplio', 'historical nice place', 'LOCAL', 'Greek', 18);
+INSERT INTO destination VALUES(NULL, 'Dortmund', 'for the real fans of dortmund f.c.', 'ABROAD', 'German', 19);
+INSERT INTO destination VALUES(NULL, 'Leukas', 'blue fantastic water of the beach', 'LOCAL', 'Greek', 20);
+INSERT INTO destination VALUES(NULL, 'Paris', 'romantic capital of Franch', 'ABROAD', 'French', 21);
+INSERT INTO destination VALUES(NULL, 'Kefalonia', 'chill island in Ionio', 'LOCAL', 'Greek', 22);
+INSERT INTO destination VALUES(NULL, 'Milan', 'where the shopping starts!', 'ABROAD', 'Italian', 23);
+INSERT INTO destination VALUES(NULL, 'Kerkura', 'the best place for party and late night walks', 'LOCAL', 'Greek', 24);
+INSERT INTO destination VALUES(NULL, 'Rome', 'touristic area', 'ABROAD', 'Italian', 25);
+INSERT INTO destination VALUES(NULL, 'Zakinthos', 'very nice places to explore', 'LOCAL', 'Greek', 26);
+INSERT INTO destination VALUES(NULL, 'Barcelona', 'a classic european city', 'ABROAD', 'Spain', 27);
+INSERT INTO destination VALUES(NULL, 'Olympos', 'winter climbing', 'LOCAL', 'Greek', 28);
+INSERT INTO destination VALUES(NULL, 'Hawai', 'the magic of the nature', 'ABROAD', 'English', 29);
+INSERT INTO destination VALUES(NULL, 'Syros', 'the perfect greek chill island', 'LOCAL', 'Greek', 30);
+
+-- gia to travel_to
+INSERT INTO travel_to VALUES(0001, 1, '2000-02-01 00:01:00', '2000-02-01 00:01:00');
+INSERT INTO travel_to VALUES(0002, 2, '2001-02-01 00:01:00', '2005-02-01 00:01:00');
+INSERT INTO travel_to VALUES(0003, 3, '2002-02-01 00:01:00', '2006-02-01 00:01:00');
+INSERT INTO travel_to VALUES(0004, 4, '2003-02-01 00:01:00', '2007-02-01 00:01:00');
+INSERT INTO travel_to VALUES(0005, 5, '2004-02-01 00:01:00', '2008-02-01 00:01:00');
+INSERT INTO travel_to VALUES(0006, 6, '2000-03-01 00:01:00', '2000-08-01 00:01:00');
+INSERT INTO travel_to VALUES(0007, 7, '2001-04-01 00:01:00', '2005-09-01 00:01:00');
+INSERT INTO travel_to VALUES(0008, 8, '2002-05-01 00:01:00', '2006-10-01 00:01:00');
+INSERT INTO travel_to VALUES(0009, 9, '2003-06-01 00:01:00', '2007-11-01 00:01:00');
+INSERT INTO travel_to VALUES(0010, 10, '2004-07-01 00:01:00', '2008-12-01 00:01:00');
+INSERT INTO travel_to VALUES(0011, 11, '2000-02-02 00:01:00', '2000-02-07 00:01:00');
+INSERT INTO travel_to VALUES(0012, 12, '2001-02-03 00:01:00', '2005-02-08 00:01:00');
+INSERT INTO travel_to VALUES(0013, 13, '2002-02-04 00:01:00', '2006-02-09 00:01:00');
+INSERT INTO travel_to VALUES(0014, 14, '2003-02-05 00:01:00', '2007-02-10 00:01:00');
+INSERT INTO travel_to VALUES(0015, 15, '2004-02-06 00:01:00', '2008-02-11 00:01:00');
+INSERT INTO travel_to VALUES(0016, 16, '2000-05-01 00:01:00', '2000-10-01 00:01:00');
+INSERT INTO travel_to VALUES(0017, 17, '2001-06-01 00:01:00', '2005-11-01 00:01:00');
+INSERT INTO travel_to VALUES(0018, 18, '2002-07-01 00:01:00', '2006-12-01 00:01:00');
+INSERT INTO travel_to VALUES(0019, 19, '2003-08-01 00:01:00', '2007-01-01 00:01:00');
+INSERT INTO travel_to VALUES(0020, 20, '2004-09-01 00:01:00', '2008-02-01 00:01:00');
+INSERT INTO travel_to VALUES(0021, 21, '2000-02-03 00:01:00', '2000-02-08 00:01:00');
+INSERT INTO travel_to VALUES(0022, 22, '2001-02-04 00:01:00', '2005-02-09 00:01:00');
+INSERT INTO travel_to VALUES(0023, 23, '2002-02-05 00:01:00', '2006-02-10 00:01:00');
+INSERT INTO travel_to VALUES(0024, 24, '2003-02-06 00:01:00', '2007-02-11 00:01:00');
+INSERT INTO travel_to VALUES(0025, 25, '2004-02-07 00:01:00', '2008-02-21 00:01:00');
+INSERT INTO travel_to VALUES(0026, 26, '2000-02-01 00:01:00', '2000-03-01 00:01:00');
+INSERT INTO travel_to VALUES(0027, 27, '2001-04-01 00:01:00', '2005-05-01 00:01:00');
+INSERT INTO travel_to VALUES(0028, 28, '2002-06-01 00:01:00', '2006-07-01 00:01:00');
+INSERT INTO travel_to VALUES(0029, 29, '2003-08-01 00:01:00', '2007-09-01 00:01:00');
+INSERT INTO travel_to VALUES(0030, 30, '2004-10-01 00:01:00', '2008-11-01 00:01:00');
+
+
+
+
+
+
+SELECT wrk_name, wrk_lname, wrk_salary
+FROM worker	
+WHERE wrk_br_code=1;
+
+
+
+
+
+
